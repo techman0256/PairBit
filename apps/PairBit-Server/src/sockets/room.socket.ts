@@ -21,12 +21,7 @@ const editor = io.of("/editor")
 const userMap = new Map<string, { username: string, roomId?: string }>();
 
 editor.on("connection", (socket) => {
-    console.log("A user is connected: ", socket.id);
-    socket.on('connect_error', (err) => {
-        console.error('Socket connection error:', err);
-    });
     // Create a new room (accept username)
-
     socket.on("create-room", ({ username }) => {
         const roomId = generateRoomId();
         userMap.set(socket.id, { username, roomId });
