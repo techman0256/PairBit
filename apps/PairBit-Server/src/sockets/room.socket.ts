@@ -9,8 +9,7 @@ function generateRoomId() {
 // This creates a socket server instance 
 const io = new SocketServer(server, {
     cors: {
-        origin: process.env.FRONTEND_ORIGIN || "http://localhost:5173",
-        credentials: true
+        origin: "*",
     },
 });
 
