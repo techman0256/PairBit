@@ -3,7 +3,7 @@ import * as Y from "yjs";
 import { YjsSocketProvider } from "./YjsSocketProvider";
 import { EditorView, basicSetup } from "codemirror";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorState, StateField } from "@codemirror/state";
+import { EditorState } from "@codemirror/state";
 
 import * as random from 'lib0/random'
 import { yCollab } from "y-codemirror.next";
@@ -17,11 +17,18 @@ interface CollaborativeEditorProps {
 }
 
 import { usercolors, languageOptions } from "../extension/languageExt";
-import { cursorTooltip } from "../extension/CursorTooltip";
+import { cursorTooltip } from "../extension/cursorTooltip";
 import {getLanguageExtension} from "../extension/languageExt";
 // select a random color for this user
 export const userColor = usercolors[random.uint32() % usercolors.length];
+const updateListener = EditorView.updateListener.of(update => {
+  if (update.selectionSet) {
+    const state = update.state;
+    const cursor = state.selection.main.head;
 
+    console.log("this is the cursor and state : ", cursor, state);
+  };
+})
 
 
 const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, username, socket }) => {
@@ -48,6 +55,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
         name: username,
         color: "#00e6fe"
       });
+
       const ytext = ydoc.getText("codemirror");
       const state = EditorState.create({
         doc: ytext.toString(),
@@ -56,7 +64,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
           getLanguageExtension(language),
           cursorTooltip(),
           yCollab(ytext, provider.awareness, { undoManager: new Y.UndoManager(ytext) }),
-          isDark ? oneDark : []
+          isDark ? oneDark : [],
         ]
       });
       if (editorRef.current) {
@@ -64,6 +72,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
       }
     };
     socket.once("yjs-sync-step-2", handleSyncStep2);
+    
 
     // Listen for color scheme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');

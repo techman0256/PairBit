@@ -16,14 +16,15 @@ export class YjsSocketProvider {
 
     // Listen for remote Yjs updates
     this.socket.on("yjs-update", (update: Uint8Array) => {
-        const uint8 = update instanceof Uint8Array ? update : new Uint8Array(update);
-        console.log("This are the upcoming updates", typeof(uint8), uint8);
-        
+        const uint8 = update instanceof Uint8Array ? update : new Uint8Array(update);        
         Y.applyUpdate(this.doc, uint8);
     });
     
     // Listen for remote awareness updates
     this.socket.on("yjs-awareness", (update: Uint8Array) => {
+        // const decoder = new TextDecoder("utf-8");
+        // console.log("These are the remote awareness updates , ", update, decoder.decode(update));
+        
         applyAwarenessUpdate(this.awareness, update, undefined);
     });
     
