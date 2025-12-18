@@ -16,15 +16,14 @@ export class YjsSocketProvider {
 
     // Listen for remote Yjs updates
     this.socket.on("yjs-update", (update: Uint8Array) => {
-        const uint8 = update instanceof Uint8Array ? update : new Uint8Array(update);
-        console.log("This are the upcoming updates", typeof(uint8), uint8);
-        
+        const uint8 = update instanceof Uint8Array ? update : new Uint8Array(update);        
         Y.applyUpdate(this.doc, uint8);
     });
     
     // Listen for remote awareness updates
     this.socket.on("yjs-awareness", (update: Uint8Array) => {
-        applyAwarenessUpdate(this.awareness, update, undefined);
+      const uint8 = update instanceof Uint8Array ? update : new Uint8Array(update);         
+      applyAwarenessUpdate(this.awareness, uint8, undefined);
     });
     
     // Broadcast local Yjs updates

@@ -40,7 +40,6 @@ editor.on("connection", (socket) => {
     });
 
     // Join an existing room (accept username)
-
     socket.on("join-room", ({ roomId, username }) => {
         const rooms = editor.adapter.rooms;
         if (rooms.has(roomId)) {
@@ -68,7 +67,6 @@ editor.on("connection", (socket) => {
     });
 
     // Broadcast message in the room
-
     socket.on("message", ({ roomId, text, user }) => {
         console.log(`Message in ${roomId} from ${user}: ${text}`);
         editor.to(roomId).emit("message", {
@@ -99,7 +97,6 @@ editor.on("connection", (socket) => {
 
     // Relay Yjs awareness (cursor/presence) updates
     socket.on("yjs-awareness", ({ roomId, update }) => {
-        console.log("yjs awareness docuemtns ....", update)
         if (roomId && update) {
             socket.to(roomId).emit("yjs-awareness", update);
         }
