@@ -22,10 +22,8 @@ export class YjsSocketProvider {
     
     // Listen for remote awareness updates
     this.socket.on("yjs-awareness", (update: Uint8Array) => {
-        // const decoder = new TextDecoder("utf-8");
-        // console.log("These are the remote awareness updates , ", update, decoder.decode(update));
-        
-        applyAwarenessUpdate(this.awareness, update, undefined);
+      const uint8 = update instanceof Uint8Array ? update : new Uint8Array(update);         
+      applyAwarenessUpdate(this.awareness, uint8, undefined);
     });
     
     // Broadcast local Yjs updates

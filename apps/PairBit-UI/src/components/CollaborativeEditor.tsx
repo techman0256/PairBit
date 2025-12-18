@@ -17,19 +17,11 @@ interface CollaborativeEditorProps {
 }
 
 import { usercolors, languageOptions } from "../extension/languageExt";
-import { cursorTooltip } from "../extension/cursorTooltip";
+import { remoteCursorTooltip } from "../extension/cursorTooltip";
+
 import {getLanguageExtension} from "../extension/languageExt";
 // select a random color for this user
-export const userColor = usercolors[random.uint32() % usercolors.length];
-const updateListener = EditorView.updateListener.of(update => {
-  if (update.selectionSet) {
-    const state = update.state;
-    const cursor = state.selection.main.head;
-
-    console.log("this is the cursor and state : ", cursor, state);
-  };
-})
-
+const userColor = usercolors[random.uint32() % usercolors.length];
 
 const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, username, socket }) => {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -53,7 +45,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
       providerRef.current = provider;
       provider.awareness.setLocalStateField("user", {
         name: username,
-        color: "#00e6fe"
+        color: userColor.color
       });
 
       const ytext = ydoc.getText("codemirror");
@@ -62,7 +54,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
         extensions: [
           basicSetup,
           getLanguageExtension(language),
-          cursorTooltip(),
+          remoteCursorTooltip(),
           yCollab(ytext, provider.awareness, { undoManager: new Y.UndoManager(ytext) }),
           isDark ? oneDark : [],
         ]
@@ -136,17 +128,10 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
           ))}
         </select>
       </div>
-      <div ref={editorRef} style={{ width:700, height: 400, borderRadius: 8, overflow: 'hidden', background: 'var(--cm-background, #523737ff)' }} />
+      <div ref={editorRef} style={{ width:700, height: 400, borderRadius: 8, overflow: 'hidden', background: 'var(--cm-background, #eaeaeaff)' }} />
     </div>
   );
 };
 
 
 export default CollaborativeEditor;
-
-
-/* 
-  Awarness : 
-    - Cursor, language
-
-*/

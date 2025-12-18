@@ -97,7 +97,6 @@ editor.on("connection", (socket) => {
 
     // Relay Yjs awareness (cursor/presence) updates
     socket.on("yjs-awareness", ({ roomId, update }) => {
-        console.log("yjs awareness docuemtns ....", update, typeof(update))
         if (roomId && update) {
             socket.to(roomId).emit("yjs-awareness", update);
         }
