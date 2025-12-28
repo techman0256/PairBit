@@ -29,33 +29,41 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
   const providerRef = useRef<YjsSocketProvider | undefined>(undefined);
   const viewRef = useRef<EditorView | undefined>(undefined);
   const [language, setLanguage] = React.useState<string>("javascript");
+  const settingsMapRef = useRef<Y.Map<any> | undefined>(undefined);
 
   useEffect(() => {
     if (socket && !socket.connected) {
       socket.connect();
     }
+    // 1. Create Y.Doc and YjsSocketProvider first
     const ydoc = new Y.Doc();
     ydocRef.current = ydoc;
+    const provider = new YjsSocketProvider(roomId, ydoc, socket);
+    providerRef.current = provider;
+    provider.awareness.setLocalStateField("user", {
+      name: username,
+      color: userColor.color
+    });
+    // 2. Wait for initial sync before accessing Y.Map
     const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     const stateVector = Y.encodeStateVector(ydoc);
     socket.emit("yjs-sync-step-1", { roomId, stateVector });
-    const handleSyncStep2 = (update: Uint8Array) => {
-      Y.applyUpdate(ydoc, update instanceof Uint8Array ? update : new Uint8Array(update));
-      const provider = new YjsSocketProvider(roomId, ydoc, socket);
-      providerRef.current = provider;
-      provider.awareness.setLocalStateField("user", {
-        name: username,
-        color: userColor.color
-      });
 
+    // Helper to (re)create the editor with the current language
+    const recreateEditor = (lang: string) => {
       const ytext = ydoc.getText("codemirror");
+      if (viewRef.current) viewRef.current.destroy();
       const state = EditorState.create({
         doc: ytext.toString(),
         extensions: [
           basicSetup,
-          getLanguageExtension(language),
+          getLanguageExtension(lang),
           remoteCursorTooltip(),
-          yCollab(ytext, provider.awareness, { undoManager: new Y.UndoManager(ytext) }),
+          yCollab(
+            ytext,
+            provider.awareness,
+            { undoManager: new Y.UndoManager(ytext) }
+          ),
           isDark ? oneDark : [],
         ]
       });
@@ -63,8 +71,31 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
         viewRef.current = new EditorView({ state, parent: editorRef.current });
       }
     };
+
+    // Listen for language changes in the Y.Map and re-create editor
+    let settingsMap: Y.Map<any>;
+    let handleLanguageChange: (() => void) | undefined;
+
+    const handleSyncStep2 = (update: Uint8Array) => {
+      Y.applyUpdate(ydoc, update instanceof Uint8Array ? update : new Uint8Array(update));
+      // 3. Now get the shared settings map
+      settingsMap = ydoc.getMap("settings");
+      settingsMapRef.current = settingsMap;
+      // Only set default if not set after sync
+      if (!settingsMap.has("language")) {
+        settingsMap.set("language", "javascript");
+      }
+      handleLanguageChange = () => {
+        const val = settingsMap.get("language");
+        const lang: string = typeof val === "string" ? val : "javascript";
+        setLanguage(lang);
+        recreateEditor(lang);
+      };
+      settingsMap.observe(handleLanguageChange);
+      // Set initial value and create editor
+      handleLanguageChange();
+    };
     socket.once("yjs-sync-step-2", handleSyncStep2);
-    
 
     // Listen for color scheme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -72,11 +103,13 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
       if (editorRef.current && ydocRef.current && providerRef.current) {
         if (viewRef.current) viewRef.current.destroy();
         const ytext = ydocRef.current.getText("codemirror");
+        const langVal = settingsMapRef.current?.get("language");
+        const lang = typeof langVal === "string" ? langVal : "javascript";
         const state = EditorState.create({
           doc: ytext.toString(),
           extensions: [
             basicSetup,
-            getLanguageExtension(language),
+            getLanguageExtension(lang),
             yCollab(ytext, providerRef.current.awareness, { undoManager: new Y.UndoManager(ytext) }),
             e.matches ? oneDark : []
           ]
@@ -91,28 +124,12 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
       if (viewRef.current) viewRef.current.destroy();
       socket.off("yjs-sync-step-2", handleSyncStep2);
       mediaQuery.removeEventListener('change', handleColorSchemeChange);
+      if (settingsMap && handleLanguageChange) settingsMap.unobserve(handleLanguageChange);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, username, socket, getLanguageExtension]);
 
-  // Handle language change
-  useEffect(() => {
-    if (!viewRef.current || !editorRef.current || !ydocRef.current || !providerRef.current) return;
-    const ytext = ydocRef.current.getText("codemirror");
-    const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const state = EditorState.create({
-      doc: ytext.toString(),
-      extensions: [
-        basicSetup,
-        getLanguageExtension(language),
-        yCollab(ytext, providerRef.current.awareness, { undoManager: new Y.UndoManager(ytext) }),
-        isDark ? oneDark : [],
-      ]
-    });
-    viewRef.current.destroy();
-    viewRef.current = new EditorView({ state, parent: editorRef.current });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language]);
+  // Remove the language effect, as editor is now re-created on Y.Map change
 
   return (
     <div>
@@ -121,7 +138,12 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
         <select
           id="language-select"
           value={language}
-          onChange={e => setLanguage(e.target.value)}
+          onChange={e => {
+            // Update the Y.Map, which will sync to all clients
+            if (settingsMapRef.current) {
+              settingsMapRef.current.set("language", e.target.value);
+            }
+          }}
         >
           {languageOptions.map(opt => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
