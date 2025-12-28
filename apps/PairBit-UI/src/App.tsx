@@ -6,6 +6,9 @@ import Stack from '@mui/material/Stack';
 
 import RoomDialog from './components/RoomDialog';
 import Room from './components/Room';
+import MessageSnackbar from './components/MessageSnackbar';
+import { useContext } from 'react';
+import MessageContext from './context/messageContext';
 
 function generateDefaultUsername(): string {
   const randomStr = Math.random().toString(36).substring(2, 8);
@@ -24,6 +27,7 @@ interface HomeProps {
 }
 
 const Home: React.FC<HomeProps> = ({ username, setUsername, setActiveRoomId }) => {
+  const messageContext = useContext(MessageContext);
   const navigate = useNavigate();
   const [openJoin, setOpenJoin] = useState<boolean>(false);
   const [openCreate, setOpenCreate] = useState<boolean>(false);
@@ -46,6 +50,9 @@ const Home: React.FC<HomeProps> = ({ username, setUsername, setActiveRoomId }) =
       if (msg?.type === 'success' && msg?.data?.roomId) {
         setActiveRoomId(msg.data.roomId);
         navigate(`/${msg.data.roomId}`);
+        messageContext?.setMessage('Room created successfully!', 'success');
+      } else {
+        messageContext?.setMessage('Failed to create room.', 'error');
       }
     });
     setOpenCreate(false);
@@ -57,7 +64,11 @@ const Home: React.FC<HomeProps> = ({ username, setUsername, setActiveRoomId }) =
       if (msg?.type === 'success' && msg?.data?.roomId) {
         setActiveRoomId(msg.data.roomId);
         navigate(`/${msg.data.roomId}`);
+        messageContext?.setMessage(`Room ${msg.data.roomId} joined successfully!`, 'success');
       }
+    });
+    socket.once('room-not-found', (msg: any) => {
+      messageContext?.setMessage(msg?.error || 'Room not found.', 'error');
     });
     setOpenJoin(false);
     setRoomCode('');
@@ -153,13 +164,56 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Listen for user-joined and user-left events globally
+  const messageContext = useContext(MessageContext);
+  useEffect(() => {
+    const onUserJoined = (msg: any) => {
+      if (msg?.data?.username) {
+        // Only show for others, not for the user who just joined
+        if (msg.data.userId !== socket.id) {
+          messageContext?.setMessage(`${msg.data.username} joined the room.`, 'info');
+        }
+      }
+    };
+    const onUserLeft = (msg: any) => {
+      if (msg?.data?.username) {
+        messageContext?.setMessage(`${msg.data.username} left the room.`, 'warning');
+      }
+    };
+    const onConnect = () => {
+      messageContext?.setMessage('Connected to server.', 'success');
+    };
+    const onDisconnecting = () => {
+      messageContext?.setMessage('Disconnecting from server...', 'warning');
+    };
+    const onConnectError = (err: any) => {
+      const errorMsg = err?.message || 'Socket connection error.';
+      messageContext?.setMessage(errorMsg, 'error');
+    };
+    socket.on('user-joined', onUserJoined);
+    socket.on('user-left', onUserLeft);
+    socket.on('connect', onConnect);
+    socket.on('disconnecting', onDisconnecting);
+    socket.on('connect_error', onConnectError);
+    return () => {
+      socket.off('user-joined', onUserJoined);
+      socket.off('user-left', onUserLeft);
+      socket.off('connect', onConnect);
+      socket.off('disconnecting', onDisconnecting);
+      socket.off('connect_error', onConnectError);
+    };
+  }, [messageContext]);
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home username={username} setUsername={setUsername} setActiveRoomId={setActiveRoomId} />} />
-        <Route path=":roomId" element={<Room username={username} activeRoomId={activeRoomId} setActiveRoomId={setActiveRoomId} />} />
-      </Routes>
-    </Router>
+    <>
+      <MessageSnackbar />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home username={username} setUsername={setUsername} setActiveRoomId={setActiveRoomId} />} />
+          <Route path=":roomId" element={<Room username={username} activeRoomId={activeRoomId} setActiveRoomId={setActiveRoomId} />} />
+        </Routes>
+      </Router>
+    </>
   );
 };
 

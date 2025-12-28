@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from "react";
 import * as Y from "yjs";
-import { Awareness } from "y-protocols/awareness";
 import { YjsSocketProvider } from "./YjsSocketProvider";
 import { EditorView, basicSetup } from "codemirror";
 import { oneDark } from "@codemirror/theme-one-dark";
