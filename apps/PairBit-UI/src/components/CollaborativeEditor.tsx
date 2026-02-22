@@ -4,6 +4,7 @@ import { YjsSocketProvider } from "./YjsSocketProvider";
 import { EditorView, basicSetup } from "codemirror";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { EditorState } from "@codemirror/state";
+import { showMinimap } from "@replit/codemirror-minimap"
 
 import * as random from 'lib0/random'
 import { yCollab } from "y-codemirror.next";
@@ -30,6 +31,11 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
   const viewRef = useRef<EditorView | undefined>(undefined);
   const [language, setLanguage] = React.useState<string>("javascript");
   const settingsMapRef = useRef<Y.Map<any> | undefined>(undefined);
+  
+  let create = (v: EditorView) => {
+  const dom = document.createElement('div');
+  return { dom }
+}
 
   useEffect(() => {
     if (socket && !socket.connected) {
@@ -65,6 +71,16 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
             { undoManager: new Y.UndoManager(ytext) }
           ),
           isDark ? oneDark : [],
+          showMinimap.compute(['doc'], (state) => {
+          return {
+            create,
+            /* optional */
+            displayText: 'blocks',
+            showOverlay: 'always',
+            gutters: [ { 1: '#00FF00', 2: '#00FF00' } ],
+            
+          }
+    }),
         ]
       });
       if (editorRef.current) {
@@ -150,7 +166,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
           ))}
         </select>
       </div>
-      <div ref={editorRef} style={{ width:700, height: 400, borderRadius: 8, overflow: 'hidden', background: 'var(--cm-background, #eaeaeaff)' }} />
+      <div ref={editorRef} style={{ width:'90vw', height: 400, borderRadius: 8, overflow: 'hidden', background: 'var(--cm-background, #eaeaeaff)' }} />
     </div>
   );
 };
