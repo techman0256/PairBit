@@ -45,39 +45,53 @@ const Room: React.FC<RoomProps> = ({ username, activeRoomId, setActiveRoomId }) 
   };
 
   return (
-    <div style={{ padding: 24, maxWidth: 600, margin: "0 auto" }}>
-      <h2>Room: {activeRoomId}</h2>
-      <div style={{ marginBottom: 12, color: '#00e6fe', fontWeight: 600 }}>
-        Username: {username}
+    <div style={{ display: 'grid', width: '95vw', gridTemplateColumns: '1fr 5fr', padding: 12, margin: '0 auto', gap: 16 }}>
+      {/* Left Panel : metadata and description */}
+      <div>
+        <h2>Room ID: {activeRoomId}</h2>
+        <div style={{ marginBottom: 12, color: '#00e6fe', fontWeight: 600 }}>
+          Username: {username}
+        </div>
+        <div style={{ marginTop: 24, background: '#181c24', borderRadius: 12, padding: 18, color: '#fff', boxShadow: '0 2px 8px #0002', maxWidth: 260 }}>
+          <h3 style={{ fontSize: 16, marginBottom: 8 }}>About</h3>
+          <p style={{ fontSize: 12, marginBottom: 14, color: '#b0b8c1' }}>
+            PairBit is a collaborative code editor for real-time pair programming, and code sharing. Work together in rooms, see live edits, and communicate instantly.
+          </p>
+          <a
+            href="https://github.com/techman0256/PairBit"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: '#00e6fe',
+              textDecoration: 'none',
+              fontWeight: 600,
+              fontSize: 12,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 16,
+              border: '1px solid #00e6fe',
+              borderRadius: 6,
+              padding: '4px 10px',
+              transition: 'background 0.2s',
+              width: 'fit-content',
+            }}
+            onMouseOver={e => (e.currentTarget.style.background = '#00e6fe22')}
+            onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+          >
+            <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor" style={{ marginRight: 4 }}>
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.01.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.11.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+            </svg>
+            View on GitHub
+          </a>
+        </div>
       </div>
-      {/* <div style={{ minHeight: 200, border: '1px solid #eee', borderRadius: 8, padding: 12, marginBottom: 16, background: '#232526', color: '#fff' }}>
-        {messages.length === 0 && <div style={{ color: '#888' }}>No messages yet.</div>}
-        {messages.map((m, i) => (
-          <div key={i} style={{ marginBottom: 8 }}>
-            <strong>{m.user}:</strong> {m.text}
-            <span style={{ marginLeft: 8, color: "#888", fontSize: 12 }}>
-              {new Date(m.timestamp).toLocaleTimeString()}
-            </span>
-          </div>
-        ))}
-      </div> */}
-      {/* <div style={{ display: 'flex', gap: 8 }}>
-        <input
-          type="text"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') handleSend(); }}
-          placeholder="Type a message..."
-          style={{ flex: 1, padding: 8, borderRadius: 6, border: '1px solid #00e6fe', outline: 'none', fontSize: 16 }}
-        />
-        <button
-          onClick={handleSend}
-          style={{ padding: '8px 18px', borderRadius: 6, background: 'linear-gradient(90deg, #00e6fe 0%, #3a7bd5 100%)', color: '#fff', border: 'none', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}
-        >
-          Send
-        </button>
-      </div> */}
-      <CollaborativeEditor roomId={activeRoomId || ""} username={username || ""} socket={socket} />
+
+      <div>
+        {/* Right Panel: Code Editor */}
+        <div style={{ padding: 0, borderTopRightRadius: 12, borderBottomRightRadius: 12, background: '#1a1e29', display: 'flex', flexDirection: 'column' }}>
+          <CollaborativeEditor roomId={activeRoomId || ""} username={username || ""} socket={socket} />
+        </div>
+      </div>
     </div>
   );
 };
