@@ -75,7 +75,7 @@ const Home: React.FC<HomeProps> = ({ username, setUsername, setActiveRoomId }) =
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'linear-gradient(135deg, #232526 0%, #414345 100%)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
       <h1 style={{ color: '#00e6fe', fontFamily: 'Montserrat, Arial, sans-serif', fontWeight: 700, letterSpacing: 2, marginBottom: 40 }}>PairBit Collaborative Code Editor</h1>
       <Stack direction="row" spacing={4}>
         <Button

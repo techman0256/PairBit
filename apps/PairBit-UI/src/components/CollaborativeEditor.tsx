@@ -4,6 +4,7 @@ import { YjsSocketProvider } from "./YjsSocketProvider";
 import { EditorView, basicSetup } from "codemirror";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { EditorState } from "@codemirror/state";
+import { showMinimap } from "@replit/codemirror-minimap"
 
 import * as random from 'lib0/random'
 import { yCollab } from "y-codemirror.next";
@@ -30,6 +31,11 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
   const viewRef = useRef<EditorView | undefined>(undefined);
   const [language, setLanguage] = React.useState<string>("javascript");
   const settingsMapRef = useRef<Y.Map<any> | undefined>(undefined);
+  
+  let create = (v: EditorView) => {
+  const dom = document.createElement('div');
+  return { dom }
+}
 
   useEffect(() => {
     if (socket && !socket.connected) {
@@ -65,6 +71,16 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
             { undoManager: new Y.UndoManager(ytext) }
           ),
           isDark ? oneDark : [],
+          showMinimap.compute(['doc'], (state) => {
+            return {
+              create,
+              /* optional */
+              displayText: 'blocks',
+              showOverlay: 'always',
+              gutters: [ { 1: '#00FF00', 2: '#00FF00' } ],
+              
+            }
+          }),
         ]
       });
       if (editorRef.current) {
@@ -132,17 +148,51 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
   // Remove the language effect, as editor is now re-created on Y.Map change
 
   return (
-    <div>
-      <div style={{ marginBottom: 8 }}>
-        <label htmlFor="language-select" style={{ marginRight: 8 }}>Language:</label>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #181c24 0%, #23283a 100%)',
+        borderRadius: 16,
+        boxShadow: '0 4px 24px 0 #0004',
+        padding: '8px 0',
+        minHeight: 'calc(80vh + 64px)',
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 900,
+          margin: '0 auto 18px auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          gap: 12,
+        }}
+      >
+        <label htmlFor="language-select" style={{ marginRight: 8, color: '#b0b8c1', fontWeight: 500, fontSize: 15 }}>Language:</label>
         <select
           id="language-select"
           value={language}
           onChange={e => {
-            // Update the Y.Map, which will sync to all clients
             if (settingsMapRef.current) {
               settingsMapRef.current.set("language", e.target.value);
             }
+          }}
+          style={{
+            padding: '6px 14px',
+            borderRadius: 6,
+            border: '1px solid #2e3448',
+            background: '#23283a',
+            color: '#00e6fe',
+            fontWeight: 600,
+            fontSize: 15,
+            outline: 'none',
+            boxShadow: '0 1px 4px #0002',
+            transition: 'border 0.2s',
           }}
         >
           {languageOptions.map(opt => (
@@ -150,7 +200,20 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
           ))}
         </select>
       </div>
-      <div ref={editorRef} style={{ width:700, height: 400, borderRadius: 8, overflow: 'hidden', background: 'var(--cm-background, #eaeaeaff)' }} />
+      <div
+        ref={editorRef}
+        style={{
+          width: '100%',
+          maxWidth: 900,
+          height: '80vh',
+          borderRadius: 12,
+          overflow: 'hidden',
+          background: 'var(--cm-background, #23283a)',
+          boxShadow: '0 2px 16px 0 #0003',
+          border: '1.5px solid #23283a',
+          margin: '0 auto',
+        }}
+      />
     </div>
   );
 };
