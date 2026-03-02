@@ -47,9 +47,26 @@ const Room: React.FC<RoomProps> = ({ username, activeRoomId, setActiveRoomId }) 
   };
 
   return (
-    <div style={{ display: 'grid', width: '95vw', gridTemplateColumns: '1fr 5fr', padding: 12, margin: '0 auto', gap: 16, background: palette.background, color: palette.text }}>
+    <div
+      style={{
+        display: 'grid',
+        width: '100vw',
+        height: '100vh',
+        gridTemplateColumns: '1fr 4fr',
+        padding: 0,
+        margin: 0,
+        gap: 0,
+        background: palette.background,
+        color: palette.text,
+        overflow: 'hidden',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        zIndex: 1,
+      }}
+    >
       {/* Left Panel : metadata and description */}
-      <div>
+      <div style={{ height: '100%', minHeight: '100vh', boxSizing: 'border-box', padding: 24 }}>
         <h2>Room ID: {activeRoomId}</h2>
         <div style={{ marginBottom: 12, color: palette.accent, fontWeight: 600 }}>
           Username: {username}
@@ -88,9 +105,19 @@ const Room: React.FC<RoomProps> = ({ username, activeRoomId, setActiveRoomId }) 
         </div>
       </div>
 
-      <div>
+      <div style={{ height: '100%', minHeight: '100vh', boxSizing: 'border-box', overflow: 'hidden' }}>
         {/* Right Panel: Code Editor */}
-        <div style={{ padding: 0, borderTopRightRadius: 12, borderBottomRightRadius: 12, background: palette.foreground, display: 'flex', flexDirection: 'column' }}>
+        <div style={{
+          height: '100%',
+          width: '100%',
+          padding: 0,
+          borderTopRightRadius: 12,
+          borderBottomRightRadius: 12,
+          background: palette.foreground,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}>
           <CollaborativeEditor roomId={activeRoomId || ""} username={username || ""} socket={socket} />
         </div>
       </div>
