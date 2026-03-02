@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTheme } from "../context/themeContext";
 import { useNavigate } from "react-router-dom";
 import socket from "../socket";
 import CollaborativeEditor from "./CollaborativeEditor";
@@ -19,6 +20,7 @@ const Room: React.FC<RoomProps> = ({ username, activeRoomId, setActiveRoomId }) 
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const { mode, toggleTheme, palette } = useTheme();
 
   // // If not activeRoomId or it doesn't match the URL, redirect to home
   useEffect(() => {
@@ -45,16 +47,16 @@ const Room: React.FC<RoomProps> = ({ username, activeRoomId, setActiveRoomId }) 
   };
 
   return (
-    <div style={{ display: 'grid', width: '95vw', gridTemplateColumns: '1fr 5fr', padding: 12, margin: '0 auto', gap: 16 }}>
+    <div style={{ display: 'grid', width: '95vw', gridTemplateColumns: '1fr 5fr', padding: 12, margin: '0 auto', gap: 16, background: palette.background, color: palette.text }}>
       {/* Left Panel : metadata and description */}
       <div>
         <h2>Room ID: {activeRoomId}</h2>
-        <div style={{ marginBottom: 12, color: '#00e6fe', fontWeight: 600 }}>
+        <div style={{ marginBottom: 12, color: palette.accent, fontWeight: 600 }}>
           Username: {username}
         </div>
-        <div style={{ marginTop: 24, background: '#181c24', borderRadius: 12, padding: 18, color: '#fff', boxShadow: '0 2px 8px #0002', maxWidth: 260 }}>
+        <div style={{ marginTop: 24, background: palette.foreground, borderRadius: 12, padding: 18, color: palette.text, boxShadow: `0 2px 8px ${palette.border}`, maxWidth: 260 }}>
           <h3 style={{ fontSize: 16, marginBottom: 8 }}>About</h3>
-          <p style={{ fontSize: 12, marginBottom: 14, color: '#b0b8c1' }}>
+          <p style={{ fontSize: 12, marginBottom: 14, color: palette.secondary }}>
             PairBit is a collaborative code editor for real-time pair programming, and code sharing. Work together in rooms, see live edits, and communicate instantly.
           </p>
           <a
@@ -62,20 +64,20 @@ const Room: React.FC<RoomProps> = ({ username, activeRoomId, setActiveRoomId }) 
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              color: '#00e6fe',
+              color: palette.accent,
               textDecoration: 'none',
               fontWeight: 600,
               fontSize: 12,
               display: 'flex',
               alignItems: 'center',
               gap: 16,
-              border: '1px solid #00e6fe',
+              border: `1px solid ${palette.accent}`,
               borderRadius: 6,
               padding: '4px 10px',
               transition: 'background 0.2s',
               width: 'fit-content',
             }}
-            onMouseOver={e => (e.currentTarget.style.background = '#00e6fe22')}
+            onMouseOver={e => (e.currentTarget.style.background = `${palette.accent}22`)}
             onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
           >
             <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor" style={{ marginRight: 4 }}>
@@ -88,7 +90,7 @@ const Room: React.FC<RoomProps> = ({ username, activeRoomId, setActiveRoomId }) 
 
       <div>
         {/* Right Panel: Code Editor */}
-        <div style={{ padding: 0, borderTopRightRadius: 12, borderBottomRightRadius: 12, background: '#1a1e29', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: 0, borderTopRightRadius: 12, borderBottomRightRadius: 12, background: palette.foreground, display: 'flex', flexDirection: 'column' }}>
           <CollaborativeEditor roomId={activeRoomId || ""} username={username || ""} socket={socket} />
         </div>
       </div>

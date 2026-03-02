@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { useTheme } from "../context/themeContext";
 import * as Y from "yjs";
 import { YjsSocketProvider } from "./YjsSocketProvider";
 import { EditorView, basicSetup } from "codemirror";
@@ -31,6 +32,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
   const viewRef = useRef<EditorView | undefined>(undefined);
   const [language, setLanguage] = React.useState<string>("javascript");
   const settingsMapRef = useRef<Y.Map<any> | undefined>(undefined);
+  const { palette } = useTheme();
   
   let create = (v: EditorView) => {
   const dom = document.createElement('div');
@@ -51,7 +53,8 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
       color: userColor.color
     });
     // 2. Wait for initial sync before accessing Y.Map
-    const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Use theme mode from context
+    const isDark = palette.background === "#181c24";
     const stateVector = Y.encodeStateVector(ydoc);
     socket.emit("yjs-sync-step-1", { roomId, stateVector });
 
@@ -74,11 +77,9 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
           showMinimap.compute(['doc'], (state) => {
             return {
               create,
-              /* optional */
               displayText: 'blocks',
               showOverlay: 'always',
-              gutters: [ { 1: '#00FF00', 2: '#00FF00' } ],
-              
+              gutters: [ { 1: palette.accent, 2: palette.accent } ],
             }
           }),
         ]
@@ -115,31 +116,12 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
 
     // Listen for color scheme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleColorSchemeChange = (e: MediaQueryListEvent) => {
-      if (editorRef.current && ydocRef.current && providerRef.current) {
-        if (viewRef.current) viewRef.current.destroy();
-        const ytext = ydocRef.current.getText("codemirror");
-        const langVal = settingsMapRef.current?.get("language");
-        const lang = typeof langVal === "string" ? langVal : "javascript";
-        const state = EditorState.create({
-          doc: ytext.toString(),
-          extensions: [
-            basicSetup,
-            getLanguageExtension(lang),
-            yCollab(ytext, providerRef.current.awareness, { undoManager: new Y.UndoManager(ytext) }),
-            e.matches ? oneDark : []
-          ]
-        });
-        viewRef.current = new EditorView({ state, parent: editorRef.current });
-      }
-    };
-    mediaQuery.addEventListener('change', handleColorSchemeChange);
+    // Remove color scheme listener, theme is now handled by context
 
     return () => {
       providerRef.current?.destroy();
       if (viewRef.current) viewRef.current.destroy();
       socket.off("yjs-sync-step-2", handleSyncStep2);
-      mediaQuery.removeEventListener('change', handleColorSchemeChange);
       if (settingsMap && handleLanguageChange) settingsMap.unobserve(handleLanguageChange);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -155,10 +137,10 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
         height: '100%',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #181c24 0%, #23283a 100%)',
+        background: palette.background,
         borderRadius: 16,
-        boxShadow: '0 4px 24px 0 #0004',
-        padding: '8px 0',
+        boxShadow: `0 4px 24px 0 ${palette.border}`,
+        padding: '0px 16px',
         minHeight: 'calc(80vh + 64px)',
       }}
     >
@@ -166,14 +148,14 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
         style={{
           width: '100%',
           maxWidth: 900,
-          margin: '0 auto 18px auto',
+          margin: '0 auto 12px auto',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-end',
           gap: 12,
         }}
       >
-        <label htmlFor="language-select" style={{ marginRight: 8, color: '#b0b8c1', fontWeight: 500, fontSize: 15 }}>Language:</label>
+        <label htmlFor="language-select" style={{ marginRight: 8, color: palette.secondary, fontWeight: 500, fontSize: 15 }}>Language:</label>
         <select
           id="language-select"
           value={language}
@@ -185,9 +167,9 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
           style={{
             padding: '6px 14px',
             borderRadius: 6,
-            border: '1px solid #2e3448',
-            background: '#23283a',
-            color: '#00e6fe',
+            border: `1px solid ${palette.border}`,
+            background: palette.foreground,
+            color: palette.accent,
             fontWeight: 600,
             fontSize: 15,
             outline: 'none',
@@ -204,13 +186,13 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({ roomId, usern
         ref={editorRef}
         style={{
           width: '100%',
-          maxWidth: 900,
+          // maxWidth: 900,
           height: '80vh',
           borderRadius: 12,
           overflow: 'hidden',
-          background: 'var(--cm-background, #23283a)',
-          boxShadow: '0 2px 16px 0 #0003',
-          border: '1.5px solid #23283a',
+          background: palette.foreground,
+          boxShadow: `0 2px 16px 0 ${palette.border}`,
+          border: `1.5px solid ${palette.border}`,
           margin: '0 auto',
         }}
       />
